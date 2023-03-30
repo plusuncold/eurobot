@@ -2,7 +2,7 @@
 # pylint: disable=unused-argument, wrong-import-position
 
 import os
-from telegram import ForceReply, Update
+from telegram import ForceReply, Update, ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 import json
 import random
@@ -139,14 +139,11 @@ async def current_picks_command(update: Update, context: ContextTypes.DEFAULT_TY
     if not state.finished_registration:
         await update.message.reply_text("Registration is not complete!")
         return
-    await update.message.reply_text(get_picked_countries())
+    await update.message.reply_text(get_picked_countries(), parse_mode=ParseMode.MARKDOWN)
 
 
 async def end_registration_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /end_registration is issued."""
-    if not update.effective_user.id == 71529156:
-        await update.message.reply_text("You are not allowed to use this command!")
-        return
     if len(state.registered_users) == 0:
         await update.message.reply_text("At least one person must be registered!")
         return
