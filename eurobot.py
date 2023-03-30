@@ -2,10 +2,12 @@
 # pylint: disable=unused-argument, wrong-import-position
 
 import os
-from telegram import ForceReply, Update, ParseMode
+from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 import json
 import random
+import glob
+import telegram
 
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN_EUROBOT', "EMPTY")
@@ -68,8 +70,9 @@ SONGS = {
 
 
 class State:
-    def __init__(self) -> None:
-        if os.path.exists('state.json'):
+    def __init__(self, chat_id) -> None:
+        self.chat_id = chat_id
+        if os.path.exists(path_for_chat_id(chat_id)):
             self.load_state()
         else:
             self.registered_users = {}
@@ -83,17 +86,35 @@ class State:
             self.save_state()
     
     def save_state(self):
-        with open('state.json', 'w') as outfile:
+        with open(path_for_chat_id(self.chat_id), 'w') as outfile:
             json.dump(self.__dict__, outfile)
     
     def load_state(self):
-        with open('state.json', 'r') as infile:
+        with open(path_for_chat_id(self.chat_id), 'r') as infile:
             self.__dict__ = json.load(infile)
 
-state = State()
+
+def path_for_chat_id(chat_id):
+    return 'state_' + str(chat_id) + '.json'
+
+states = {}
+
+def get_state_this_chat(update):
+    chat_id = update.effective_chat.id
+    if chat_id not in states.keys():
+        states[chat_id] = State(chat_id)
+    return states[chat_id]
+
+
+# for every file that matches state*.json, load it
+for file in glob.glob("state_*.json"):
+    chat_id = int(file[6:-5])
+    states[chat_id] = State(chat_id)
+
 
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /register is issued."""
+    state = get_state_this_chat(update)
     if update.effective_user.id in state.registered_users.keys():
         await update.message.reply_text("You are already registered!")
         return
@@ -108,7 +129,8 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         reply_markup=ForceReply(selective=True),
     )
 
-def get_next_picking_user():
+def get_next_picking_user(update):
+    state = get_state_this_chat(update)
     if state.current_picking_user is None:
         state.current_picking_user = state.draft_order[0]
     else:
@@ -124,6 +146,7 @@ def get_next_picking_user():
 
 async def still_to_pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /still_to_pick is issued."""
+    state = get_state_this_chat(update)
     if not state.finished_registration:
         await update.message.reply_text("Registration is not complete!")
         return
@@ -136,14 +159,16 @@ async def still_to_pick_command(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def current_picks_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /current_picks is issued."""
+    state = get_state_this_chat(update)
     if not state.finished_registration:
         await update.message.reply_text("Registration is not complete!")
         return
-    await update.message.reply_text(get_picked_countries(), parse_mode=ParseMode.MARKDOWN)
+    await update.message.reply_text(get_picked_countries(update), parse_mode=telegram.constants.ParseMode.MARKDOWN)
 
 
 async def end_registration_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /end_registration is issued."""
+    state = get_state_this_chat(update)
     if len(state.registered_users) == 0:
         await update.message.reply_text("At least one person must be registered!")
         return
@@ -173,13 +198,14 @@ async def end_registration_command(update: Update, context: ContextTypes.DEFAULT
     state.left_over = len(COUNTRIES) - state.picks
     reply_text += "\nThere will be a total of " + str(state.picks) + " picks. \n\n" + str(state.left_over) + " countries will be left over."
     
-    reply_text += "\n\nFirst to pick is " + get_next_picking_user()
+    reply_text += "\n\nFirst to pick is " + get_next_picking_user(update)
 
     state.save_state()
     await update.message.reply_text(reply_text)
 
 
-def get_picked_countries():
+def get_picked_countries(update):
+    state = get_state_this_chat(update)
     text = "Picks so far:"
     for user_id, user_name in state.registered_users.items():
         if isinstance(user_id, str):
@@ -199,6 +225,7 @@ def get_picked_countries():
 
 async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /pick is issued."""
+    state = get_state_this_chat(update)
     if not state.finished_registration:
         await update.message.reply_text("Registration is not complete!")
         return
@@ -231,7 +258,7 @@ async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         reply_text += "\n\nDraft complete!"
         state.draft_complete = True
     else:
-        reply_text += "\nThe next person to pick is " + get_next_picking_user()
+        reply_text += "\nThe next person to pick is " + get_next_picking_user(update)
     state.save_state()
     await update.message.reply_text(reply_text)
 
