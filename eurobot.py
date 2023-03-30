@@ -153,7 +153,7 @@ async def still_to_pick_command(update: Update, context: ContextTypes.DEFAULT_TY
     not_picked_countries = [ x for x in COUNTRIES if x not in state.picked_countries.keys() ]
     reply_text = "Countries still to be picked:\n"
     for country in not_picked_countries:
-        reply_text += f"{country.title()} {COUNTRY_FLAGS[country]}\n"
+        reply_text += f"{country.title()} {COUNTRY_FLAGS[country]} - {SONGS[country]}\n"
     await update.message.reply_text(reply_text)
 
 
