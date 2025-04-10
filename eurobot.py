@@ -180,7 +180,7 @@ class State:
 
 
 def path_for_chat_id(chat_id):
-    return 'state_' + str(chat_id) + '.json'
+    return 'states/state_' + str(chat_id) + '.json'
 
 states = {}
 
@@ -193,7 +193,7 @@ def get_state_this_chat(update):
 
 
 # for every file that matches state*.json, load it
-for file in glob.glob("state_*.json"):
+for file in glob.glob("states/state_*.json"):
     chat_id = int(file[6:-5])
     states[chat_id] = State(chat_id)
 
