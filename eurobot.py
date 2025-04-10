@@ -11,13 +11,6 @@ import telegram
 
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN_EUROBOT', "EMPTY")
-COUNTRIES = [ 
-        "albania", "armenia", "australia", "austria", "azerbaijan", "belgium", "croatia", "cyprus", "czechia",
-        "denmark", "estonia", "finland", "france", "georgia", "germany", "greece", "iceland", "ireland",
-        "israel", "italy", "latvia", "lithuania", "luxembourg", "malta", "moldova", "netherlands", "norway",
-        "poland", "portugal", "san marino", "serbia", "slovenia", "spain", "sweden", "switzerland", "ukraine",
-        "united kingdom"
-]
 COUNTRY_FLAGS = {
     "norway": "🇳🇴", "malta": "🇲🇹", "serbia": "🇷🇸", "latvia": "🇱🇻", "portugal": "🇵🇹", "ireland": "🇮🇪", "croatia": "🇭🇷",
     "switzerland": "🇨🇭", "israel": "🇮🇱", "moldova": "🇲🇩", "sweden": "🇸🇪", "azerbaijan": "🇦🇿", "czechia": "🇨🇿",
@@ -26,79 +19,126 @@ COUNTRY_FLAGS = {
     "san marino": "🇸🇲", "austria": "🇦🇹", "albania": "🇦🇱", "lithuania": "🇱🇹", "australia": "🇦🇺", "france": "🇫🇷", 
     "germany": "🇩🇪", "italy": "🇮🇹", "spain": "🇪🇸", "ukraine": "🇺🇦", "united kingdom": "🇬🇧", "luxembourg": "🇱🇺" }
 
-SEMI_FINAL_ONE = [ "norway", "malta", "serbia", "latvia", "portugal", "ireland", "croatia", "switzerland", "israel", "moldova", "sweden", "azerbaijan", "czech republic", "netherlands", "finland" ]
-SEMI_FINAL_TWO = [ "denmark", "armenia", "romania", "estonia", "belgium", "cyprus", "iceland", "greece", "poland", "slovenia", "georgia", "san marino", "austria", "albania", "lithuania", "australia" ]
-SEMI_FINAL_ONE_ELIMINATED = [ "malta", "latvia", "ireland", "azerbaijan", "netherlands" ]
-SEMI_FINAL_TWO_ELIMINATED = [ "denmark", "romania", "iceland", "greece", "georgia", "san marino" ]
-RESULTS = {
-"norway": { "jury": 52, "televote": 216 },
-"serbia": { "jury": 14, "televote": 16 },
-"portugal": { "jury": 43, "televote": 16 },
-"croatia": { "jury": 11, "televote": 112 },
-"switzerland": { "jury": 6, "televote": 31 },
-"israel": { "jury": 177, "televote": 185 },
-"moldova": { "jury": 20, "televote": 76 },
-"sweden": { "jury": 340, "televote": 243 },
-"czech republic": { "jury": 94, "televote": 35 },
-"finland": { "jury": 150, "televote": 376 },
-"armenia": { "jury": 69, "televote": 53 },
-"estonia": { "jury": 146, "televote": 22 },
-"belgium": { "jury": 127, "televote": 55 },
-"cyprus": { "jury": 68, "televote": 58 },
-"poland": { "jury": 12, "televote": 81 },
-"slovenia": { "jury": 33, "televote": 45 },
-"austria": { "jury": 104, "televote": 16 },
-"albania": { "jury": 17, "televote": 59 },
-"lithuania": { "jury": 81, "televote": 46 },
-"australia": { "jury": 130, "televote": 21 },
-"france": { "jury": 54, "televote": 50 },
-"germany": { "jury": 3, "televote": 15 },
-"italy": { "jury": 176, "televote": 174 },
-"spain": { "jury": 95, "televote": 5 },
-"ukraine": { "jury": 54, "televote": 189 },
-"united kingdom": { "jury": 15, "televote": 9 }
-}
+SEMI_FINAL_ONE = [
+    "Iceland",
+    "Poland",
+    "Slovenia",
+    "Estonia",
+    "Ukraine",
+    "Sweden",
+    "Portugal",
+    "Norway",
+    "Belgium",
+    "Azerbaijan",
+    "San Marino",
+    "Albania",
+    "Netherlands",
+    "Croatia",
+    "Cyprus"
+]
 
+SEMI_FINAL_TWO = [
+    "Australia",
+    "Montenegro",
+    "Ireland",
+    "Latvia",
+    "Armenia",
+    "Austria",
+    "Greece",
+    "Lithuania",
+    "Malta",
+    "Georgia",
+    "Denmark",
+    "Czechia",
+    "Luxembourg",
+    "Israel",
+    "Serbia",
+    "Finland"
+]
+SEMI_FINAL_ONE_ELIMINATED = []
+SEMI_FINAL_TWO_ELIMINATED = []
+RESULTS = {}
+
+# eurovision 2025
 SONGS = {
-    "albania": "Titan - Besa",
-    "armenia": "Jako - Ladaniva",
-    "australia": "One Milkali (One Blood) - Electric Fields",
-    "austria": "We Will Rave - Kaleen",
-    "azerbaijan": "Özünlə apar - Fahree feat. Ilkin Dovlatov",
-    "belgium": "Before the Party's Over - Mustii",
-    "croatia": "Rim Tim Tagi Dim - Baby Lasagna",
-    "cyprus": "Liar - Silia Kapsis",
-    "czechia": "Pedestal - Aiko",
-    "denmark": "Sand - Saba",
-    "estonia": "(Nendest) narkootikumidest ei tea me (küll) midagi - 5miinust and Puuluup",
-    "finland": "No Rules! - Windows95man",
-    "france": "Mon amour - Slimane",
-    "georgia": "Firefighter - Nutsa Buzaladze",
-    "germany": "Always on the Run - Isaak",
-    "greece": "Zari - Marina Satti",
-    "iceland": "Scared of Heights - Hera Björk",
-    "ireland": "Doomsday Blue - Bambie Thug",
-    "israel": "Hurricane - Eden Golan",
-    "italy": "La noia - Angelina Mango",
-    "latvia": "Hollow - Dons",
-    "lithuania": "Luktelk - Silvester Belt",
-    "luxembourg": "Fighter - Tali",
-    "malta": "Loop - Sarah Bonnici",
-    "moldova": "In the Middle - Natalia Barbu",
-    "netherlands": "Europapa - Joost Klein",
-    "norway": "Ulveham - Gåte",
-    "poland": "The Tower - Luna",
-    "portugal": "Grito - Iolanda",
-    "san marino": "11:11 - Megara",
-    "serbia": "Ramonda - Teya Dora",
-    "slovenia": "Veronika - Raiven",
-    "spain": "Zorra - Nebulossa",
-    "sweden": "Unforgettable - Marcus & Martinus",
-    "switzerland": "The Code - Nemo",
-    "ukraine": "Teresa & Maria - Alyona Alyona and Jerry Heil",
-    "united kingdom": "Dizzy - Olly Alexander",
+    "albania": "Zjerm",
+    "armenia": "Survivor",
+    "australia": "Milkshake Man",
+    "austria": "Wasted Love",
+    "azerbaijan": "Run With U",
+    "belgium": "Strobe Lights",
+    "croatia": "Poison Cake",
+    "cyprus": "Shh",
+    "czechia": "Kiss Kiss Goodbye",
+    "denmark": "Hallucination",
+    "estonia": "Espresso Macchiato",
+    "finland": "Ich komme",
+    "france": "Maman",
+    "georgia": "Freedom",
+    "germany": "Baller",
+    "greece": "Asteromáta",
+    "iceland": "Róa",
+    "ireland": "Laika Party",
+    "israel": "New Day Will Rise",
+    "italy": "Volevo essere un duro",
+    "latvia": "Bur man laimi",
+    "lithuania": "Tavo akys",
+    "luxembourg": "La poupée monte le son",
+    "malta": "Serving",
+    "montenegro": "Dobrodošli",
+    "netherlands": "C'est la vie",
+    "norway": "Lighter",
+    "poland": "Gaja",
+    "portugal": "Deslocado",
+    "san marino": "Tutta l'Italia",
+    "serbia": "Mila",
+    "slovenia": "How Much Time Do We Have Left",
+    "spain": "Esa diva",
+    "sweden": "Bara bada bastu",
+    "switzerland": "Voyage",
+    "ukraine": "Bird of Pray",
+    "united kingdom": "What the Hell Just Happened?"
 }
-
+SONG_URLS = {
+    "albania": "https://www.youtube.com/watch?v=Sfvb761EEcM",
+    "armenia": "https://www.youtube.com/watch?v=RfH5o3XtI2c",
+    "australia": "https://www.youtube.com/watch?v=_08I6mjHSLA",
+    "austria": "https://www.youtube.com/watch?v=-ieSTNpxvio",
+    "azerbaijan": "https://www.youtube.com/watch?v=upbiPJ9uA70",
+    "belgium": "https://www.youtube.com/watch?v=ScupiVTosHU",
+    "croatia": "https://www.youtube.com/watch?v=ie_v6qGCc5w",
+    "cyprus": "https://www.youtube.com/watch?v=rbfQqWyqgJw",
+    "czechia": "https://www.youtube.com/watch?v=Hm8CIICKAJU",
+    "denmark": "https://www.youtube.com/watch?v=gdCAgiSIOUc",
+    "estonia": "https://www.youtube.com/watch?v=5MS_Fczs_98",
+    "finland": "https://www.youtube.com/watch?v=Kg3QoTpnqyw",
+    "france": "https://www.youtube.com/watch?v=Pj2DTSLcNnI",
+    "georgia": "https://www.youtube.com/watch?v=c3wu0dUNd4c",
+    "germany": "https://www.youtube.com/watch?v=zJplC4-9Scs",
+    "greece": "https://www.youtube.com/watch?v=aDiq8J9h6vQ",
+    "iceland": "https://www.youtube.com/watch?v=s9P83Nl6D1M",
+    "ireland": "https://www.youtube.com/watch?v=cZnusVb7yjs",
+    "israel": "https://www.youtube.com/watch?v=Q3BELu4z6-U",
+    "italy": "https://www.youtube.com/watch?v=-Alz9MnqyZI",
+    "latvia": "https://www.youtube.com/watch?v=RKw0OCgPV3s",
+    "lithuania": "https://www.youtube.com/watch?v=R2f2aZ6Fy58",
+    "luxembourg": "https://www.youtube.com/watch?v=LVHu_KwHiKY",
+    "malta": "https://www.youtube.com/watch?v=sLVSwfRRvMA",
+    "montenegro": "https://www.youtube.com/watch?v=ydMkpaB0CWk",
+    "netherlands": "https://www.youtube.com/watch?v=hEHwr5k9pd0",
+    "norway": "https://www.youtube.com/watch?v=pUjWzQ671MQ",
+    "poland": "https://www.youtube.com/watch?v=YXHHDjiclxA",
+    "portugal": "https://www.youtube.com/watch?v=-s1Cc2uEj3U",
+    "san marino": "https://www.youtube.com/watch?v=Le3WpaLYRvE",
+    "serbia": "https://www.youtube.com/watch?v=18BCbtvDcag",
+    "slovenia": "https://www.youtube.com/watch?v=GT1YhfRpq3Q",
+    "spain": "https://www.youtube.com/watch?v=BvVxhbCW9rw",
+    "sweden": "https://www.youtube.com/watch?v=WK3HOMhAeQY",
+    "switzerland": "https://www.youtube.com/watch?v=dGX54zRExR8",
+    "ukraine": "https://www.youtube.com/watch?v=OJ1x2aiL7ks",
+    "united kingdom": "https://www.youtube.com/watch?v=-hu6R3ZnOdY"
+}
+COUNTRIES = list(SONGS.keys())
 
 
 
@@ -357,7 +397,10 @@ async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
     state.picked_countries[country] = update.effective_user.id
 
-    reply_text = update.effective_user.full_name +  " picked " + country.title() + " (" + COUNTRY_FLAGS[country] + ") - " + SONGS[country] + "."
+    flag = COUNTRY_FLAGS[country]
+    song_title = SONGS[country]
+    song_url = SONG_URLS[country]
+    reply_text = update.effective_user.full_name +  " picked " + country.title() + " (" + flag + ") - " + song_title + " " + song_url + "."
     reply_text += "\n\nThere are " + str(state.picks - len(state.picked_countries)) + " countries left to pick (type \\still_to_pick to see them).\n"
     if len(state.picked_countries) == state.picks:
         reply_text += "\n\nDraft complete!"
