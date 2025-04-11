@@ -29,6 +29,3 @@ RUN /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
 COPY . .
-
-# Set the default command to run the bot using the virtual environment
-CMD ["/app/venv/bin/python", "eurobot.py"]
