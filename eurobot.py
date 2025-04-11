@@ -17,7 +17,9 @@ COUNTRY_FLAGS = {
     "netherlands": "🇳🇱", "finland": "🇫🇮", "denmark": "🇩🇰", "armenia": "🇦🇲", "romania": "🇷🇴", "estonia": "🇪🇪",
     "belgium": "🇧🇪", "cyprus": "🇨🇾", "iceland": "🇮🇸", "greece": "🇬🇷", "poland": "🇵🇱", "slovenia": "🇸🇮", "georgia": "🇬🇪", 
     "san marino": "🇸🇲", "austria": "🇦🇹", "albania": "🇦🇱", "lithuania": "🇱🇹", "australia": "🇦🇺", "france": "🇫🇷", 
-    "germany": "🇩🇪", "italy": "🇮🇹", "spain": "🇪🇸", "ukraine": "🇺🇦", "united kingdom": "🇬🇧", "luxembourg": "🇱🇺" }
+    "germany": "🇩🇪", "italy": "🇮🇹", "spain": "🇪🇸", "ukraine": "🇺🇦", "united kingdom": "🇬🇧", "luxembourg": "🇱🇺",
+     "montenegro": "🇲🇪"
+}
 
 SEMI_FINAL_ONE = [
     "Iceland",
@@ -194,7 +196,7 @@ def get_state_this_chat(update):
 
 # for every file that matches state*.json, load it
 for file in glob.glob("states/state_*.json"):
-    chat_id = int(file[6:-5])
+    chat_id = int(file[13:-5])
     states[chat_id] = State(chat_id)
 
 
