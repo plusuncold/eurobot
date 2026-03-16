@@ -22,40 +22,39 @@ COUNTRY_FLAGS = {
 }
 
 SEMI_FINAL_ONE = [
-    "Iceland",
-    "Poland",
-    "Slovenia",
-    "Estonia",
-    "Ukraine",
-    "Sweden",
-    "Portugal",
-    "Norway",
-    "Belgium",
-    "Azerbaijan",
-    "San Marino",
-    "Albania",
-    "Netherlands",
     "Croatia",
-    "Cyprus"
+    "Finland",
+    "Georgia",
+    "Greece",
+    "Moldova",
+    "Portugal",
+    "Sweden",
+    "Belgium",
+    "Estonia",
+    "Israel",
+    "Lithuania",
+    "Montenegro",
+    "Poland",
+    "San Marino",
+    "Serbia"
 ]
 
 SEMI_FINAL_TWO = [
-    "Australia",
-    "Montenegro",
-    "Ireland",
-    "Latvia",
     "Armenia",
-    "Austria",
-    "Greece",
-    "Lithuania",
-    "Malta",
-    "Georgia",
-    "Denmark",
+    "Azerbaijan",
+    "Bulgaria",
     "Czechia",
     "Luxembourg",
-    "Israel",
-    "Serbia",
-    "Finland"
+    "Romania",
+    "Switzerland",
+    "Albania",
+    "Australia",
+    "Cyprus",
+    "Denmark",
+    "Latvia",
+    "Malta",
+    "Norway",
+    "Ukraine"
 ]
 SEMI_FINAL_ONE_ELIMINATED = []
 SEMI_FINAL_TWO_ELIMINATED = []
@@ -63,82 +62,42 @@ RESULTS = {}
 
 # eurovision 2025
 SONGS = {
-    "albania": "Zjerm",
-    "armenia": "Survivor",
-    "australia": "Milkshake Man",
-    "austria": "Wasted Love",
-    "azerbaijan": "Run With U",
-    "belgium": "Strobe Lights",
-    "croatia": "Poison Cake",
-    "cyprus": "Shh",
-    "czechia": "Kiss Kiss Goodbye",
-    "denmark": "Hallucination",
-    "estonia": "Espresso Macchiato",
-    "finland": "Ich komme",
-    "france": "Maman",
-    "georgia": "Freedom",
-    "germany": "Baller",
-    "greece": "Asteromáta",
-    "iceland": "Róa",
-    "ireland": "Laika Party",
-    "israel": "New Day Will Rise",
-    "italy": "Volevo essere un duro",
-    "latvia": "Bur man laimi",
-    "lithuania": "Tavo akys",
-    "luxembourg": "La poupée monte le son",
-    "malta": "Serving",
-    "montenegro": "Dobrodošli",
-    "netherlands": "C'est la vie",
-    "norway": "Lighter",
-    "poland": "Gaja",
-    "portugal": "Deslocado",
-    "san marino": "Tutta l'Italia",
-    "serbia": "Mila",
-    "slovenia": "How Much Time Do We Have Left",
-    "spain": "Esa diva",
-    "sweden": "Bara bada bastu",
-    "switzerland": "Voyage",
-    "ukraine": "Bird of Pray",
-    "united kingdom": "What the Hell Just Happened?"
+    "albania": "Nân",
+    "armenia": "Paloma rumba",
+    "australia": "Eclipse",
+    "austria": "Tanzschein",
+    "azerbaijan": "Just Go",
+    "belgium": "Dancing on the Ice",
+    "bulgaria": "Bangaranga",
+    "croatia": "Andromeda",
+    "cyprus": "Jalia",
+    "denmark": "Før vi går hjem",
+    "estonia": "Too Epic to Be True",
+    "finland": "Liekinheitin",
+    "france": "Regarde !",
+    "georgia": "On Replay",
+    "germany": "Fire",
+    "greece": "Φέρτο",
+    "israel": "Michelle",
+    "italy": "Per sempre si",
+    "latvia": "Ēnā",
+    "lithuania": "Sólo quiero más",
+    "luxembourg": "Mother Nature",
+    "malta": "Bella",
+    "moldova": "Viva, Moldova!",
+    "montenegro": "Нова зора",
+    "norway": "Ya Ya Ya",
+    "poland": "Pray",
+    "portugal": "Rosa",
+    "romania": "Choke Me",
+    "san marino": "Superstar",
+    "serbia": "Крај мене",
+    "sweden": "My System",
+    "switzerland": "Alice",
+    "ukraine": "Рідним",
+    "united kingdom": "Eins, zwei, drei"
 }
 SONG_URLS = {
-    "albania": "https://www.youtube.com/watch?v=Sfvb761EEcM",
-    "armenia": "https://www.youtube.com/watch?v=RfH5o3XtI2c",
-    "australia": "https://www.youtube.com/watch?v=_08I6mjHSLA",
-    "austria": "https://www.youtube.com/watch?v=-ieSTNpxvio",
-    "azerbaijan": "https://www.youtube.com/watch?v=upbiPJ9uA70",
-    "belgium": "https://www.youtube.com/watch?v=ScupiVTosHU",
-    "croatia": "https://www.youtube.com/watch?v=ie_v6qGCc5w",
-    "cyprus": "https://www.youtube.com/watch?v=rbfQqWyqgJw",
-    "czechia": "https://www.youtube.com/watch?v=Hm8CIICKAJU",
-    "denmark": "https://www.youtube.com/watch?v=gdCAgiSIOUc",
-    "estonia": "https://www.youtube.com/watch?v=5MS_Fczs_98",
-    "finland": "https://www.youtube.com/watch?v=Kg3QoTpnqyw",
-    "france": "https://www.youtube.com/watch?v=Pj2DTSLcNnI",
-    "georgia": "https://www.youtube.com/watch?v=c3wu0dUNd4c",
-    "germany": "https://www.youtube.com/watch?v=zJplC4-9Scs",
-    "greece": "https://www.youtube.com/watch?v=aDiq8J9h6vQ",
-    "iceland": "https://www.youtube.com/watch?v=s9P83Nl6D1M",
-    "ireland": "https://www.youtube.com/watch?v=cZnusVb7yjs",
-    "israel": "https://www.youtube.com/watch?v=Q3BELu4z6-U",
-    "italy": "https://www.youtube.com/watch?v=-Alz9MnqyZI",
-    "latvia": "https://www.youtube.com/watch?v=RKw0OCgPV3s",
-    "lithuania": "https://www.youtube.com/watch?v=R2f2aZ6Fy58",
-    "luxembourg": "https://www.youtube.com/watch?v=LVHu_KwHiKY",
-    "malta": "https://www.youtube.com/watch?v=sLVSwfRRvMA",
-    "montenegro": "https://www.youtube.com/watch?v=ydMkpaB0CWk",
-    "netherlands": "https://www.youtube.com/watch?v=hEHwr5k9pd0",
-    "norway": "https://www.youtube.com/watch?v=pUjWzQ671MQ",
-    "poland": "https://www.youtube.com/watch?v=YXHHDjiclxA",
-    "portugal": "https://www.youtube.com/watch?v=-s1Cc2uEj3U",
-    "san marino": "https://www.youtube.com/watch?v=Le3WpaLYRvE",
-    "serbia": "https://www.youtube.com/watch?v=18BCbtvDcag",
-    "slovenia": "https://www.youtube.com/watch?v=GT1YhfRpq3Q",
-    "spain": "https://www.youtube.com/watch?v=BvVxhbCW9rw",
-    "sweden": "https://www.youtube.com/watch?v=WK3HOMhAeQY",
-    "switzerland": "https://www.youtube.com/watch?v=dGX54zRExR8",
-    "ukraine": "https://www.youtube.com/watch?v=OJ1x2aiL7ks",
-    "united kingdom": "https://www.youtube.com/watch?v=-hu6R3ZnOdY"
 }
 COUNTRIES = list(SONGS.keys())
 
@@ -401,8 +360,10 @@ async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     flag = COUNTRY_FLAGS[country]
     song_title = SONGS[country]
-    song_url = SONG_URLS[country]
-    reply_text = update.effective_user.full_name +  " picked " + country.title() + " (" + flag + ") - " + song_title + " " + song_url + "."
+    song_url = SONG_URLS[country] if country in SONG_URLS else None
+    reply_text = update.effective_user.full_name +  " picked " + country.title() + " (" + flag + ") - " + song_title + " "
+    if song_url:
+        reply_text += song_url + "."
     reply_text += "\n\nThere are " + str(state.picks - len(state.picked_countries)) + " countries left to pick (type \\still_to_pick to see them).\n"
     if len(state.picked_countries) == state.picks:
         reply_text += "\n\nDraft complete!"
