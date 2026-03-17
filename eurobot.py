@@ -4,12 +4,12 @@
 import os
 from telegram import ForceReply, Update, KeyboardButton, ReplyKeyboardMarkup, BotCommand
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
-import json
 import random
-import glob
 import telegram
+from state import get_state_this_chat, load_all_states
 
 
+# Set up constsants and global variables
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN_EUROBOT', "EMPTY")
 COUNTRY_FLAGS = {
     "norway": "🇳🇴", "malta": "🇲🇹", "serbia": "🇷🇸", "latvia": "🇱🇻", "portugal": "🇵🇹", "ireland": "🇮🇪", "croatia": "🇭🇷",
@@ -103,60 +103,6 @@ COUNTRIES = list(SONGS.keys())
 
 
 
-
-
-class State:
-    def __init__(self, chat_id) -> None:
-        self.chat_id = chat_id
-        if os.path.exists(path_for_chat_id(chat_id)):
-            self.load_state()
-            self.make_everything_int()
-        else:
-            self.registered_users = {}
-            self.current_picking_user = None
-            self.picked_countries = {}
-            self.finished_registration = False
-            self.draft_complete = False
-            self.draft_order = []
-            self.picks = 0
-            self.left_over = 0
-            self.save_state()
-    
-    def save_state(self):
-        with open(path_for_chat_id(self.chat_id), 'w') as outfile:
-            json.dump(self.__dict__, outfile)
-    
-    def load_state(self):
-        with open(path_for_chat_id(self.chat_id), 'r') as infile:
-            self.__dict__ = json.load(infile)
-
-    def make_everything_int(self):
-        if isinstance(self.current_picking_user, str):
-            self.current_picking_user = int(self.current_picking_user)
-        registered_users = { int(k): v for k, v in self.registered_users.items() }
-        self.registered_users = registered_users
-        for i in range(len(self.draft_order)):
-            if isinstance(self.draft_order[i], str):
-                self.draft_order[i] = int(self.draft_order[i])
-
-
-def path_for_chat_id(chat_id):
-    return 'states/state_' + str(chat_id) + '.json'
-
-states = {}
-
-def get_state_this_chat(update):
-    chat_id = update.effective_chat.id
-    if chat_id not in states.keys():
-        states[chat_id] = State(chat_id)
-        print("Created new state for chat " + str(chat_id))
-    return states[chat_id]
-
-
-# for every file that matches state*.json, load it
-for file in glob.glob("states/state_*.json"):
-    chat_id = int(file[13:-5])
-    states[chat_id] = State(chat_id)
 
 
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -583,6 +529,10 @@ async def results_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 def main() -> None:
     """Start the bot."""
+
+    print("Loading states...")
+    load_all_states()
+
     print("Running with token: " + TELEGRAM_TOKEN)
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(TELEGRAM_TOKEN).build()
