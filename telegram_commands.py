@@ -153,22 +153,21 @@ async def end_registration_command(update: Update, context: ContextTypes.DEFAULT
     await update.message.reply_text(reply_text)
 
 
-async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def pick_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE, llm: bool = True) -> None:
     """Send a message when the command /pick is issued."""
     state = get_state_this_chat(update)
     if not state.is_registration_closed():
-        await update.message.reply_text("Registration is not yet complete!")
-        return
+        return "Registration is not yet complete!"
     if not state.is_user_turn(update.effective_user.id):
-        await update.message.reply_text(f"It is {state.get_current_picking_user()}'s turn to pick!")
-        return
+        return f"It is {state.get_current_picking_user()}'s turn to pick!"
     if state.is_draft_complete():
-        await update.message.reply_text("Draft is already complete!")
-        return
+        return "Draft is already complete!"
     # if the message is just "/pick" (or /pick@....), send a keyboard with all the countries that have not been picked yet
     if len(update.message.text.split()) == 1 and update.message.text[:5] == "/pick":
-        await pick_country_via_keyboard(update)
-        return
+        if not llm:
+            return None
+        else:
+            return "Error - shouldn't be here in LLM mode"
 
     # remove the leading "/pick " from the message
     country = ""
@@ -180,11 +179,9 @@ async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     country = convert_first_word_to_country(country)
 
     if not country in COUNTRIES:
-        await update.message.reply_text("Invalid country!")
-        return
+        return "Invalid country!"
     if state.has_country_been_picked(country):
-        await update.message.reply_text(f"Country '{country.title()}' already picked!")
-        return
+        return f"Country '{country.title()}' already picked!"
     
     state.set_picked_country(country, update.effective_user.id)
 
@@ -199,7 +196,17 @@ async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         reply_text += "\n\nDraft complete!"
     else:
         reply_text += "\nThe next person to pick is " + state.get_current_picking_user()
+    
+    return reply_text
 
+
+async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message when the command /pick is issued."""
+    reply_text = pick_command_text(update, context, False)
+    if not reply_text:
+        # send a keyboard with all the countries that have not been picked yet
+        await pick_country_via_keyboard(update)
+        return
     await update.message.reply_text(reply_text)
 
 
