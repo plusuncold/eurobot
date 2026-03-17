@@ -3,6 +3,8 @@ import json
 import glob
 import random
 
+from euro_information import get_country_count
+
 # Global variable to hold the state of each chat. Key is chat_id, value is State object.
 states = {}
 
@@ -14,7 +16,7 @@ class State:
         else:
             self._registered_users = {}
             self._current_picking_user = None
-            self._picked_countries = {}
+            self._picked_countries = {} # key is country, value is user_id of picker
             self._finished_registration = False
             self._draft_complete = False
             self._draft_order = []
@@ -45,6 +47,11 @@ class State:
                 user_id = int(user_id)
             yield user_id
     
+    def is_user_registered(self, user_id):
+        if isinstance(user_id, str):
+            user_id = int(user_id)
+        return user_id in self._registered_users.keys()
+    
     def add_user(self, user_id, user_name):
         if isinstance(user_id, str):
             user_id = int(user_id)
@@ -67,6 +74,7 @@ class State:
     def end_user_registration(self):
         self._finished_registration = True
         self._shuffle_users_into_draft_order()
+        self.__set_pick_count_and_left_over()
         self.save_state()
     
     def _shuffle_users_into_draft_order(self):
@@ -75,11 +83,75 @@ class State:
         reversed = self.draft_order.copy()
         reversed.reverse()
         self._draft_order.extend(reversed)
+        self.forward_draft_order()
         self.save_state()
+    
+    def _set_pick_count_and_left_over(self):
+        country_count = get_country_count()
+        user_count = self.get_registered_user_count()
+        rounds = country_count // user_count
+        self._picks = user_count * rounds
+        self._left_over = country_count - self._picks
+    
+    def get_pick_count(self):
+        return self._picks
+    
+    def get_left_over_count(self):
+        return self._left_over
+    
+    def forward_draft_order(self):
+        index = 0
+        if self._current_picking_user is not None:
+            pick = len(self._picked_countries)
+            index = pick % len(self._draft_order)
+        self._current_picking_user = self._draft_order[index]
+        self.save_state()
+    
+    def is_user_turn(self, user_id):
+        if isinstance(user_id, str):
+            user_id = int(user_id)
+        return self._current_picking_user == user_id
+    
+    def get_current_picking_user(self):
+        user_id = self._current_picking_user
+        return self.get_user_name(user_id)
+
+    def get_next_picking_user(self):
+        pick = len(self._picked_countries) + 1
+        if pick == self._picks:
+            return None
+        index_of_next = (pick + 1) % len(self._draft_order)
+        user_id = self._draft_order[index_of_next]
+        return self.get_user_name(user_id)
     
     def get_draft_order_names(self):
         for user_id in self._draft_order:
             yield self.get_user_name(user_id)
+    
+    def get_picked_countries(self, user_id):
+        for country, picker_id in self._picked_countries.items():
+            if isinstance(picker_id, str):
+                picker_id = int(picker_id)
+            if picker_id == user_id:
+                yield country
+    
+    def get_all_picked_countries(self):
+        for country in self._picked_countries.keys():
+            yield country
+    
+    def has_country_been_picked(self, country):
+        return country in self._picked_countries.keys()
+
+    def set_picked_country(self, country, user_id):
+        self._picked_countries[country] = user_id
+        if len(self._picked_countries) == self._picks:
+            self._draft_complete = True
+        else:
+            self.forward_draft_order()
+        self.save_state()
+
+    def get_left_to_pick_country_count(self):
+        return get_country_count() - len(self._picked_countries.keys())
     
 
 

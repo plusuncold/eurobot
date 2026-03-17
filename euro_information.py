@@ -89,3 +89,20 @@ SONG_URLS = {
 }
 COUNTRIES = list(SONGS.keys())
 
+def get_country_count():
+    return len(COUNTRIES)
+
+def convert_possible_emoji_to_country(possible_emoji):
+    for country, country_emoji in COUNTRY_FLAGS.items():
+        if country_emoji == possible_emoji:
+            return country
+    return possible_emoji
+
+def convert_first_word_to_country(possible_country):
+    if possible_country == "czech":
+        return "czech republic"
+    if possible_country == "united":
+        return "united kingdom"
+    if possible_country == "san":
+        return "san marino"
+    return possible_country
