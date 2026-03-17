@@ -88,6 +88,10 @@ SONGS = {
 SONG_URLS = {
 }
 COUNTRIES = list(SONGS.keys())
+CURRENT_YEAR = 2026
+
+def get_current_year():
+    return CURRENT_YEAR
 
 def get_country_count():
     return len(COUNTRIES)

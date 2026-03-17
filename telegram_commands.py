@@ -77,15 +77,19 @@ async def pick_country_via_keyboard(update):
 
 # COMMANDS ----------------------------------------------------
 
-async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def register_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /register is issued."""
     state = get_state_this_chat(update)
     if state.is_user_registered(update.effective_user.id):
-        await update.message.reply_text("You are already registered!")
-        return
+        return "You are already registered!"
     state.add_user(update.effective_user.id, update.effective_user.full_name)
+    return f"Hi {update.effective_user.full_name}, you are now registered for the Eurovision draft!"
+
+
+async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    reply_text = register_command_text(update, context)
     await update.message.reply_html(
-        rf"Hi {update.effective_user.full_name}, you are now registered for the Eurovision draft!",
+        rf"{reply_text}",
         reply_markup=ForceReply(selective=True),
     )
 
@@ -189,13 +193,18 @@ async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
-    message = "Welcome to the Eurovision Draft Bot! Type /help to see a list of commands.\n\n" + \
-              "Each participant needs to register by typing /register. Once everyone has registered, type /end_registration to start the draft."
+    if llm_telegram.is_llm_available():
+        message = f"Welcome to Eurovision {get_current_year()} Draft Bot!" + \
+                   "You can type /help to see a list of commands or you can just talk to me and tell me what you want to do.\n\n" + \
+                   "Each participant needs to register by typing /register or by just telling me that they want to register." + \
+                   "Once everyone has registered, type /end_registration or just tell me to end registration to start the draft."
+    else:
+        message = f"Welcome to the Eurovision {get_current_year()} Draft Bot! Type /help to see a list of commands.\n\n" + \
+                  "Each participant needs to register by typing /register. Once everyone has registered, type /end_registration to start the draft."
     await update.message.reply_text(message)
 
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /help is issued."""
+def help_command_text(update: Update):
     state = get_state_this_chat(update)
     message = "Commands:\n" + \
               "\\help - Show this message"
@@ -207,7 +216,15 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         message += "\\pick [country] - Pick a country, where [country] is either the country name or the flag emoji\n" + \
                    "\\current_picks - See the current picks\n" + \
                    "\\still_to_pick - See the countries that are still to be picked\n" + \
-                   "\\draft_order - See the draft order and who is currently picking and who is next to pick\n" + \
+                   "\\draft_order - See the draft order and who is currently picking and who is next to pick\n"
+    if llm_telegram.is_llm_available():
+        message += "\n\nYou can also just tell me what you want to do, for example 'I want to register for the draft' or 'Who is currently picking?'"
+    return message
+    
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message when the command /help is issued."""
+    message = help_command_text(update)
     await update.message.reply_text(message)
 
 
@@ -239,11 +256,11 @@ async def registered_users_command(update: Update, context: ContextTypes.DEFAULT
     await update.message.reply_text(reply_text)
 
 
-async def semi_finals_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def semi_finals_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /semi_finals is issued."""
     state = get_state_this_chat(update)
     if not state.is_registration_closed():
-        await update.message.reply_text("Registration is not complete!")
+        return "Registration is not complete!"
     non_picks = [ x for x in COUNTRIES if x not in state.picked_countries ]
     non_picks_semi_final_one = [ x for x in non_picks if x in SEMI_FINAL_ONE ]
     non_picks_semi_final_two = [ x for x in non_picks if x in SEMI_FINAL_TWO ]
@@ -288,15 +305,20 @@ async def semi_finals_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     combined_final_list = SEMI_FINAL_ONE + SEMI_FINAL_TWO
     reply_text = add_picks(reply_text, state, combined_final_list, [])
     reply_text = add_non_picks(reply_text, non_picks_final)
+    return reply_text
 
+
+async def semi_finals_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message when the command /semi_finals is issued."""
+    reply_text = semi_finals_command_text(update, context)
     await update.message.reply_text(reply_text, parse_mode=telegram.constants.ParseMode.HTML)
 
 
-async def results_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def results_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /results is issued."""
     state = get_state_this_chat(update)
     if not state.is_registration_closed():
-        await update.message.reply_text("Registration is not complete!")
+        return "Registration is not complete!"
     reply_text = "Results: "
 
     # winning pick
@@ -348,6 +370,12 @@ async def results_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         result_dict[name] = len(picks_not_eliminated)
     for name, countries_in_final in sorted(result_dict.items(), key=lambda x: x[1], reverse=True):
         reply_text += "\n<b>" + name + "</b>: " + str(countries_in_final) + " picks in final, " + str(pick_count - countries_in_final) + " picks eliminated"
+    return reply_text
+
+
+async def results_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message when the command /results is issued."""
+    reply_text = results_command_text(update)
     await update.message.reply_text(reply_text, parse_mode=telegram.constants.ParseMode.HTML)
 
 
@@ -355,7 +383,8 @@ async def messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
 
     reply_text = "Sorry, I didn't understand that."
-    user_intent = llm_telegram.get_user_intent(update.message.text, COMMANDS)
+    user_is_registered = get_state_this_chat(update).is_user_registered(update.effective_user.id)
+    user_intent = llm_telegram.get_user_intent(update.message.text, COMMANDS, user_is_registered)
 
     if not user_intent and llm_telegram.can_handle_banter():
         reply_text = llm_telegram.get_banter_reply(update.message.text)
@@ -384,15 +413,14 @@ COMMANDS = {
 }
 
 LLM_COMMANDS = {
-    "register": register_command,
-    "end_registration": end_registration_command,
-    "pick": pick_command,
-    "current_picks": current_picks_command,
-    "still_to_pick": still_to_pick_command,
-    "start": start_command,
-    "help": help_command,
-    "draft_order": draft_order_command,
-    "registered_users": registered_users_command,
-    "semifinals": semi_finals_command,
-    "results": results_command
+    "register": register_command_text,
+    "end_registration": end_registration_command, # todo
+    "pick": pick_command, # todo
+    "current_picks": current_picks_command, # todo
+    "still_to_pick": still_to_pick_command, # todo
+    "help": help_command_text,
+    "draft_order": draft_order_command,  # todo
+    "registered_users": registered_users_command, # todo
+    "semifinals": semi_finals_command_text,
+    "results": results_command_text
 }
