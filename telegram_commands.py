@@ -117,15 +117,13 @@ async def current_picks_command(update: Update, context: ContextTypes.DEFAULT_TY
     await update.message.reply_text(picked_countries_text, parse_mode=telegram.constants.ParseMode.HTML)
 
 
-async def end_registration_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def end_registration_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /end_registration is issued."""
     state = get_state_this_chat(update)
     if state.get_registered_user_count() == 0:
-        await update.message.reply_text("At least one person must be registered!")
-        return
+        return "At least one person must be registered!"
     if state.is_registration_closed():
-        await update.message.reply_text("Registration is already complete!")
-        return
+        return "Registration is already complete!"
     reply_text = "Registration is now finalized!\n"
     state.end_user_registration()
 
@@ -137,7 +135,11 @@ async def end_registration_command(update: Update, context: ContextTypes.DEFAULT
     reply_text += "\nThere will be a total of " + str(state.get_pick_count()) + " picks."
     reply_text += "\n\n" + str(state.get_left_over_count()) + " countries will be left over."
     reply_text += "\n\nFirst to pick is " + state.get_current_picking_user()
+    return reply_text
 
+
+async def end_registration_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    reply_text = end_registration_command_text(update, context)
     await update.message.reply_text(reply_text)
 
 
@@ -386,7 +388,7 @@ async def messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_is_registered = get_state_this_chat(update).is_user_registered(update.effective_user.id)
     user_intent = llm_telegram.get_user_intent(update.message.text, COMMANDS, user_is_registered)
 
-    if not user_intent and llm_telegram.can_handle_banter():
+    if not user_intent:
         reply_text = llm_telegram.get_banter_reply(update.message.text)
     
     for command_name, command_function in LLM_COMMANDS.items():
@@ -414,7 +416,7 @@ COMMANDS = {
 
 LLM_COMMANDS = {
     "register": register_command_text,
-    "end_registration": end_registration_command, # todo
+    "end_registration": end_registration_command_text,
     "pick": pick_command, # todo
     "current_picks": current_picks_command, # todo
     "still_to_pick": still_to_pick_command, # todo
