@@ -248,64 +248,45 @@ async def semi_finals_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     non_picks_semi_final_two = [ x for x in non_picks if x in SEMI_FINAL_TWO ]
     non_picks_final = [ x for x in non_picks if x not in SEMI_FINAL_ONE and x not in SEMI_FINAL_TWO ]
 
+    def add_non_picks(text, list):
+        if list:
+            text += "\n<b>Not Picked</b>: "
+            for country in list:
+                text += country.title() + " (" + COUNTRY_FLAGS[country] + "), "
+            if text[-2:] == ", ":
+                text = text[:-2]
+        return text
+    
+    def add_picks(text, state, full_list, eliminated_list):
+        for id, name in state.get_registered_users():
+            picks = [ x for x in state.get_picked_countries(id) if x in full_list ]
+            if not picks:
+                continue
+            text += "\n<b>" + name + "</b>: "
+            for pick in picks:
+                eliminated = pick in eliminated_list
+                if eliminated:
+                    text += "<s>"
+                text += pick.title() + " (" + COUNTRY_FLAGS[pick] + ")"
+                if eliminated:
+                    text += "</s>"
+                text += ", "
+            if text[-2:] == ", ":
+                text = text[:-2]
+        return text
+
     reply_text = "\n<b><u>Semi-final 1 (Tuesday)</u></b>:"
-    for id, name in state.registered_users.items():
-        reply_text += "\n<b>" + name + "</b>: "
-        picks = [ x for x in state.picked_countries if state.picked_countries[x] == id and x in SEMI_FINAL_ONE ]
-        for pick in picks:
-            eliminated = pick in SEMI_FINAL_ONE_ELIMINATED
-            if eliminated:
-                reply_text += "<s>"
-            reply_text += pick.title() + " (" + COUNTRY_FLAGS[pick] + ")"
-            if eliminated:
-                reply_text += "</s>"
-            reply_text += ", "
-        if reply_text[-2:] == ", ":
-            reply_text = reply_text[:-2]
-    if non_picks_semi_final_one:
-        reply_text += "\n<b>Not Picked</b>: "
-        for country in non_picks_semi_final_one:
-            reply_text += country.title() + " (" + COUNTRY_FLAGS[country] + "), "
-        if reply_text[-2:] == ", ":
-            reply_text = reply_text[:-2]
+    reply_text = add_picks(reply_text, state, SEMI_FINAL_ONE, SEMI_FINAL_ONE_ELIMINATED)
+    reply_text = add_non_picks(reply_text, non_picks_semi_final_one)
 
     reply_text += "\n\n\n<b><u>Semi-final 2 (Thursday)</u></b>:"
-    for id, name in state.registered_users.items():
-        reply_text += "\n<b>" + name + "</b>: "
-        picks = [ x for x in state.picked_countries if state.picked_countries[x] == id and x in SEMI_FINAL_TWO ]
-        for pick in picks:
-            eliminated = pick in SEMI_FINAL_TWO_ELIMINATED
-            if eliminated:
-                reply_text += "</s>"
-            reply_text += pick.title() + " (" + COUNTRY_FLAGS[pick] + ")"
-            if eliminated:
-                reply_text += "</s>"
-            reply_text += ", "
-        if reply_text[-2:] == ", ":
-            reply_text = reply_text[:-2]
-    if non_picks_semi_final_two:
-        reply_text += "\n<b>Not Picked</b>: "
-        for country in non_picks_semi_final_two:
-            reply_text += country.title() + " (" + COUNTRY_FLAGS[country] + "), "
-        if reply_text[-2:] == ", ":
-            reply_text = reply_text[:-2]
+    reply_text = add_picks(reply_text, state, SEMI_FINAL_TWO, SEMI_FINAL_TWO_ELIMINATED)
+    reply_text = add_non_picks(reply_text, non_picks_semi_final_two)
     
     reply_text += "\n\n\n<b><u>Final</u></b>:"
-    for id, name in state.registered_users.items():
-        picks = [ x for x in state.picked_countries if state.picked_countries[x] == id and x not in SEMI_FINAL_ONE and x not in SEMI_FINAL_TWO ]
-        if not picks:
-            continue
-        reply_text += "\n<b>" + name + "</b>: "
-        for pick in picks:
-            reply_text += pick.title() + " (" + COUNTRY_FLAGS[pick] + "), "
-        if reply_text[-2:] == ", ":
-            reply_text = reply_text[:-2]
-    if non_picks_final:
-        reply_text += "\n<b>Not Picked</b>: "
-        for country in non_picks_final:
-            reply_text += country.title() + " (" + COUNTRY_FLAGS[country] + "), "
-        if reply_text[-2:] == ", ":
-            reply_text = reply_text[:-2]
+    combined_final_list = SEMI_FINAL_ONE + SEMI_FINAL_TWO
+    reply_text = add_picks(reply_text, state, combined_final_list, [])
+    reply_text = add_non_picks(reply_text, non_picks_final)
 
     await update.message.reply_text(reply_text, parse_mode=telegram.constants.ParseMode.HTML)
 
@@ -320,71 +301,46 @@ async def results_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # winning pick
     points = { k: (v["jury"] + v["televote"]) for k,v in RESULTS.items() }
     max_points_country = max(points, key=points.get)
-    picker_max_points_country = state.registered_users[state.picked_countries[max_points_country]]
+    picker_max_points_country = state.get_user_name_who_picked_country(max_points_country)
     reply_text += "\n\n<b><u>Overall Winner</u></b>:"
     reply_text += "\n<b>" + picker_max_points_country + "</b>"
 
-    # total points
-    reply_text += "\n\n<b><u>Total Points</u></b>:"
-    result_dict = {}
-    for id, name in state.registered_users.items():
-        points = 0
-        picks = [ x for x in state.picked_countries if state.picked_countries[x] == id ]
-        for pick in picks:
-            if pick not in RESULTS:
-                continue
-            points += RESULTS[pick]["jury"] + RESULTS[pick]["televote"]
-        result_dict[name] = points
-    for name, points in sorted(result_dict.items(), key=lambda x: x[1], reverse=True):
-        reply_text += "\n<b>" + name + "</b>: " + str(points) + " points"
+    def get_winning_pick_text(reply_text, state, section):
+        points = { k: v[section] for k,v in RESULTS.items() }
+        max_points_country = max(points, key=points.get)
+        picker_max_points_country = state.get_user_name_who_picked_country(max_points_country)
+        reply_text += "\n\n<b><u>" + section.title() + " Winner</u></b>:"
+        reply_text += "\n<b>" + picker_max_points_country + "</b>"
+        return reply_text
+    
+    def get_most_points_text(reply_text, state, section):
+        reply_text += "\n\n<b><u>" + section.title() + " Most Points</u></b>:"
+        result_dict = {}
+        for id, name in state.get_registered_users():
+            points = 0
+            for pick in state.get_picked_countries(id):
+                if pick not in RESULTS:
+                    continue
+                if section == "total":
+                    points += RESULTS[pick]["jury"] + RESULTS[pick]["televote"]
+                else:
+                    points += RESULTS[pick][section]
+            result_dict[name] = points
+        for name, points in sorted(result_dict.items(), key=lambda x: x[1], reverse=True):
+            reply_text += "\n<b>" + name + "</b>: " + str(points) + " points"
+        return reply_text
 
-    # jury - winning pick
-    jury_points = { k: v["jury"] for k,v in RESULTS.items() }
-    max_jury_points_country = max(jury_points, key=jury_points.get)
-    picker_max_jury_points_country = state.registered_users[state.picked_countries[max_jury_points_country]]
-    reply_text += "\n\n<b><u>Jury Vote Winner</u></b>:"
-    reply_text += "\n<b>" + picker_max_jury_points_country + "</b>"
-
-    # jury - most points
-    reply_text += "\n\n<b><u>Jury Points</u></b>:"
-    result_dict = {}
-    for id, name in state.registered_users.items():
-        points = 0
-        picks = [ x for x in state.picked_countries if state.picked_countries[x] == id ]
-        for pick in picks:
-            if pick not in RESULTS:
-                continue
-            points += RESULTS[pick]["jury"]
-        result_dict[name] = points
-    for name, points in sorted(result_dict.items(), key=lambda x: x[1], reverse=True):
-        reply_text += "\n<b>" + name + "</b>: " + str(points) + " points"
-
-    # televote - winning pick
-    televote_points = { k: v["televote"] for k,v in RESULTS.items() }
-    max_televote_points_country = max(televote_points, key=televote_points.get)
-    picker_max_televote_points_country = state.registered_users[state.picked_countries[max_televote_points_country]]
-    reply_text += "\n\n<b><u>Televote Vote Winner</u></b>:"
-    reply_text += "\n<b>" + picker_max_televote_points_country + "</b>"
-
-    # televote - most points
-    reply_text += "\n\n<b><u>Televote Points</u></b>:"
-    result_dict = {}
-    for id, name in state.registered_users.items():
-        points = 0
-        picks = [ x for x in state.picked_countries if state.picked_countries[x] == id ]
-        for pick in picks:
-            if pick not in RESULTS:
-                continue
-            points += RESULTS[pick]["televote"]
-        result_dict[name] = points
-    for name, points in sorted(result_dict.items(), key=lambda x: x[1], reverse=True):
-        reply_text += "\n<b>" + name + "</b>: " + str(points) + " points"
+    reply_text = get_most_points_text(reply_text, state, "total")
+    reply_text = get_winning_pick_text(reply_text, state, "jury")
+    reply_text = get_most_points_text(reply_text, state, "jury")
+    reply_text = get_winning_pick_text(reply_text, state, "televote")
+    reply_text = get_most_points_text(reply_text, state, "televote")
 
     # most picks through to final
     reply_text += "\n\n<b><u>Most Picks Through to Final</u></b>:"
     pick_count = 0
     result_dict = {}
-    for id, name in state.registered_users.items():
+    for id, name in state.get_registered_users():
         picks = [ x for x in state.picked_countries if state.picked_countries[x] == id ]
         pick_count = len(picks)
         picks_not_eliminated = [ x for x in picks if x not in SEMI_FINAL_ONE_ELIMINATED and x not in SEMI_FINAL_TWO_ELIMINATED ]

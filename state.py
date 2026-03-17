@@ -153,6 +153,12 @@ class State:
     def get_left_to_pick_country_count(self):
         return get_country_count() - len(self._picked_countries.keys())
     
+    def get_user_name_who_picked_country(self, country):
+        if country not in self._picked_countries.keys():
+            return None
+        user_id = self._picked_countries[country]
+        return self.get_user_name(user_id)
+    
 
 
 
