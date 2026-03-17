@@ -11,11 +11,11 @@ from euro_information import *
 
 def get_picked_countries(update):
     state = get_state_this_chat(update)
-    if state.finished_registration:
+    if state.is_registration_closed():
         text = "Picks:\n"
     else:
         text = "Picks so far:\n"
-    for user_id, user_name in state.registered_users.items():
+    for user_id, user_name in state.get_registered_users():
         if isinstance(user_id, str):
             user_id = int(user_id)
         text += "\n<b>" + user_name + "</b>:"
@@ -35,7 +35,7 @@ def get_picked_countries(update):
             text = text[:-1]
         else:
             text += " None!"
-    if state.finished_registration:
+    if state.is_registration_closed():
         text += "\n<b>Not picked:</b>"
         for country in COUNTRIES:
             if country not in state.picked_countries.keys():
@@ -82,19 +82,15 @@ async def pick_country_via_keyboard(update):
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /register is issued."""
     state = get_state_this_chat(update)
-    if update.effective_user.id in state.registered_users.keys():
+    if update.effective_user.id in state.get_registered_user_ids():
         await update.message.reply_text("You are already registered!")
         return
-    id = update.effective_user.id
-    if isinstance(id, str):
-        id = int(id)
-    state.registered_users[id] = update.effective_user.full_name
-    state.save_state()
-
+    state.add_user(update.effective_user.id, update.effective_user.full_name)
     await update.message.reply_html(
         rf"Hi {update.effective_user.full_name}, you are now registered for the Eurovision draft!",
         reply_markup=ForceReply(selective=True),
     )
+
 
 def get_next_picking_user(update):
     state = get_state_this_chat(update)
@@ -114,7 +110,7 @@ def get_next_picking_user(update):
 async def still_to_pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /still_to_pick is issued."""
     state = get_state_this_chat(update)
-    if not state.finished_registration:
+    if not state.is_registration_closed():
         await update.message.reply_text("Registration is not complete!")
         return
     not_picked_countries = [ x for x in COUNTRIES if x not in state.picked_countries.keys() ]
@@ -127,7 +123,7 @@ async def still_to_pick_command(update: Update, context: ContextTypes.DEFAULT_TY
 async def current_picks_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /current_picks is issued."""
     state = get_state_this_chat(update)
-    if not state.finished_registration:
+    if not state.is_registration_closed():
         await update.message.reply_text("Registration is not complete!")
         return
     await update.message.reply_text(get_picked_countries(update), parse_mode=telegram.constants.ParseMode.HTML)
@@ -136,28 +132,19 @@ async def current_picks_command(update: Update, context: ContextTypes.DEFAULT_TY
 async def end_registration_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /end_registration is issued."""
     state = get_state_this_chat(update)
-    if len(state.registered_users) == 0:
+    if state.get_registered_user_count() == 0:
         await update.message.reply_text("At least one person must be registered!")
         return
-    if state.finished_registration:
+    if state.is_registration_closed():
         await update.message.reply_text("Registration is already complete!")
         return
     reply_text = "Registration is now finalized!\n"
-    state.finished_registration = True
-
-    state.draft_order = list(state.registered_users.keys()).copy()
-    random.shuffle(state.draft_order)
-    reversed = state.draft_order.copy()
-    reversed.reverse()
-    state.draft_order.extend(reversed)
-    # add elements from reversed to draft_order
-
+    state.end_user_registration()
 
     reply_text += "\nDraft order: "
-    for entry in state.draft_order:
-        reply_text += state.registered_users[entry] + ", "
-    if len(state.draft_order) != 0:
-        reply_text = reply_text[:-2]
+    for name in state.get_draft_order_names():
+        reply_text += "\n" + name + ", "
+    reply_text = reply_text[:-2] # remove the last comma and space
     
     reply_text += "\n\nThere are " + str(len(COUNTRIES)) + " countries to pick from.\n"
     rounds = len(COUNTRIES) // len(state.registered_users)
@@ -174,13 +161,13 @@ async def end_registration_command(update: Update, context: ContextTypes.DEFAULT
 async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /pick is issued."""
     state = get_state_this_chat(update)
-    if not state.finished_registration:
+    if not state.is_registration_closed():
         await update.message.reply_text("Registration is not complete!")
         return
     if not update.effective_user.id == int(state.current_picking_user) and not state.current_picking_user is None:
         await update.message.reply_text(f"It is {state.registered_users[state.current_picking_user]}'s turn to pick!")
         return
-    if state.draft_complete:
+    if state.is_draft_complete():
         await update.message.reply_text("Draft is already complete!")
         return
     # if the message is just "/pick" (or /pick@....), send a keyboard with all the countries that have not been picked yet
@@ -240,11 +227,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     state = get_state_this_chat(update)
     message = "Commands:\n" + \
               "\\help - Show this message"
-    if not state.finished_registration:
+    if not state.is_registration_closed():
         message += "\\register - Register yourself in the draft\n" + \
                    "\\registered_users - See the list of registered users\n" \
                    "\\end_registration - End registration and start making picks\n"
-    if state.finished_registration and not state.draft_complete:
+    if state.is_registration_closed() and not state.draft_complete:
         message += "\\pick [country] - Pick a country, where [country] is either the country name or the flag emoji\n" + \
                    "\\current_picks - See the current picks\n" + \
                    "\\still_to_pick - See the countries that are still to be picked\n" + \
@@ -255,13 +242,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 async def draft_order_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /draft_order is issued."""
     state = get_state_this_chat(update)
-    if not state.finished_registration:
+    if not state.is_registration_closed():
         await update.message.reply_text("Registration is not complete!")
     reply_text = "Draft order: "
     for user_id in state.draft_order:
-        if isinstance(user_id, str):
-            user_id = int(user_id)
-        reply_text += "\n" + state.registered_users[user_id]
+        reply_text += "\n" + state.get_user_name(user_id)
     reply_text += "\n\nCurrently picking: " + state.registered_users[state.current_picking_user]
     id_of_next_picking_user = state.draft_order[(state.draft_order.index(state.current_picking_user) + 1) % len(state.draft_order)]
     reply_text += "\nNext to pick: " + state.registered_users[id_of_next_picking_user]
@@ -271,18 +256,18 @@ async def draft_order_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def registered_users_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /registered_users is issued."""
     state = get_state_this_chat(update)
-    if not state.finished_registration:
+    if not state.is_registration_closed():
         await update.message.reply_text("Registration is not complete!")
     reply_text = "Registered users: "
-    for user_id in state.registered_users:
-        reply_text += "\n" + state.registered_users[user_id]
+    for _, user_name in state.get_registered_users():
+        reply_text += "\n" + user_name
     await update.message.reply_text(reply_text)
 
 
 async def semi_finals_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /semi_finals is issued."""
     state = get_state_this_chat(update)
-    if not state.finished_registration:
+    if not state.is_registration_closed():
         await update.message.reply_text("Registration is not complete!")
     non_picks = [ x for x in COUNTRIES if x not in state.picked_countries ]
     non_picks_semi_final_one = [ x for x in non_picks if x in SEMI_FINAL_ONE ]
@@ -354,7 +339,7 @@ async def semi_finals_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def results_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /results is issued."""
     state = get_state_this_chat(update)
-    if not state.finished_registration:
+    if not state.is_registration_closed():
         await update.message.reply_text("Registration is not complete!")
     reply_text = "Results: "
 
