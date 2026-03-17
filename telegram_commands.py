@@ -2,6 +2,7 @@ from state import get_state_this_chat
 from telegram import Update, ForceReply, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import ContextTypes
 import telegram
+import llm_telegram
 from euro_information import *
 
 
@@ -348,3 +349,50 @@ async def results_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     for name, countries_in_final in sorted(result_dict.items(), key=lambda x: x[1], reverse=True):
         reply_text += "\n<b>" + name + "</b>: " + str(countries_in_final) + " picks in final, " + str(pick_count - countries_in_final) + " picks eliminated"
     await update.message.reply_text(reply_text, parse_mode=telegram.constants.ParseMode.HTML)
+
+
+async def messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Echo the user message."""
+
+    reply_text = "Sorry, I didn't understand that."
+    user_intent = llm_telegram.get_user_intent(update.message.text, COMMANDS)
+
+    if not user_intent and llm_telegram.can_handle_banter():
+        reply_text = llm_telegram.get_banter_reply(update.message.text)
+    
+    for command_name, command_function in LLM_COMMANDS.items():
+        if user_intent == command_name:
+            reply_text = command_function(update, context)
+
+    await update.message.reply_text(reply_text)
+
+
+
+# COMMANDS
+COMMANDS = {
+    "register": register_command,
+    "end_registration": end_registration_command,
+    "pick": pick_command,
+    "current_picks": current_picks_command,
+    "still_to_pick": still_to_pick_command,
+    "start": start_command,
+    "help": help_command,
+    "draft_order": draft_order_command,
+    "registered_users": registered_users_command,
+    "semifinals": semi_finals_command,
+    "results": results_command
+}
+
+LLM_COMMANDS = {
+    "register": register_command,
+    "end_registration": end_registration_command,
+    "pick": pick_command,
+    "current_picks": current_picks_command,
+    "still_to_pick": still_to_pick_command,
+    "start": start_command,
+    "help": help_command,
+    "draft_order": draft_order_command,
+    "registered_users": registered_users_command,
+    "semifinals": semi_finals_command,
+    "results": results_command
+}
