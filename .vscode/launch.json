@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Python: Euro Bot",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "eurobot.py",
             "console": "integratedTerminal",

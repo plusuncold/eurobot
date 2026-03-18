@@ -1,2 +1,5 @@
 state_*.json
+state_*.json.bak
 *.tar
+__pycache__
+*.csv

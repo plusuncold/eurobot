@@ -153,7 +153,7 @@ async def end_registration_command(update: Update, context: ContextTypes.DEFAULT
     await update.message.reply_text(reply_text)
 
 
-def pick_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE, llm: bool = True) -> None:
+def pick_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE, llm: bool, country_from_llm: str) -> None:
     """Send a message when the command /pick is issued."""
     state = get_state_this_chat(update)
     if not state.is_registration_closed():
@@ -171,7 +171,9 @@ def pick_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE, llm: b
 
     # remove the leading "/pick " from the message
     country = ""
-    if len(update.message.text.split()) >= 2:
+    if country_from_llm:
+        country = country_from_llm.lower()
+    elif len(update.message.text.split()) >= 2:
         country = update.message.text.split()[1].lower()
 
     # extract the country name from the COUNTRY_FLAGS dict
@@ -206,7 +208,7 @@ def pick_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE, llm: b
 
 async def pick_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /pick is issued."""
-    reply_text = pick_command_text(update, context, False)
+    reply_text = pick_command_text(update, context, False, "")
     if not reply_text:
         # send a keyboard with all the countries that have not been picked yet
         await pick_country_via_keyboard(update)
@@ -227,7 +229,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await update.message.reply_text(message)
 
 
-def help_command_text(update: Update):
+def help_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     state = get_state_this_chat(update)
     message = "Commands:\n" + \
               "\\help - Show this message"
@@ -235,7 +237,7 @@ def help_command_text(update: Update):
         message += "\\register - Register yourself in the draft\n" + \
                    "\\registered_users - See the list of registered users\n" \
                    "\\end_registration - End registration and start making picks\n"
-    if state.is_registration_closed() and not state.draft_complete:
+    if state.is_registration_closed() and not state.is_draft_complete():
         message += "\\pick [country] - Pick a country, where [country] is either the country name or the flag emoji\n" + \
                    "\\current_picks - See the current picks\n" + \
                    "\\still_to_pick - See the countries that are still to be picked\n" + \
@@ -415,18 +417,26 @@ async def results_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
 
+    if not update.message:
+        return
+
     reply_text = "Sorry, I didn't understand that."
     user_is_registered = get_state_this_chat(update).is_user_registered(update.effective_user.id)
-    user_intent = llm_telegram.get_user_intent(update.message.text, COMMANDS, user_is_registered)
+    state = get_state_this_chat(update)
+    drafting_underway = state.is_registration_closed() and not state.is_draft_complete()
+    user_intent = llm_telegram.get_user_intent(update.message.text, COMMANDS, user_is_registered, drafting_underway)
 
     if not user_intent:
         reply_text = llm_telegram.get_banter_reply(update.message.text)
+    elif user_intent == "pick":
+        user_intent = "pick " + update.message.text.split()
     
     for command_name, command_function in LLM_COMMANDS.items():
+        if user_intent and user_intent.startswith("pick ") and command_name == "pick":
+            reply_text = pick_command_text(update, context, True, user_intent[5:])
+            break
         if user_intent == command_name:
             reply_text = command_function(update, context)
-        if user_intent and user_intent.startswith("pick "):
-            reply_text = pick_command_text(update, context, True)
 
     await update.message.reply_text(reply_text)
 

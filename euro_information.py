@@ -48,7 +48,7 @@ SEMI_FINAL_ONE_ELIMINATED = []
 SEMI_FINAL_TWO_ELIMINATED = []
 RESULTS = {}
 
-# eurovision 2025
+# eurovision 2026
 SONGS = {
     "albania": "Nân",
     "armenia": "Paloma rumba",
@@ -59,6 +59,7 @@ SONGS = {
     "bulgaria": "Bangaranga",
     "croatia": "Andromeda",
     "cyprus": "Jalia",
+    "czechia": "Crossroads",
     "denmark": "Før vi går hjem",
     "estonia": "Too Epic to Be True",
     "finland": "Liekinheitin",
@@ -103,9 +104,9 @@ def convert_possible_emoji_to_country(possible_emoji):
     return possible_emoji
 
 def convert_first_word_to_country(possible_country):
-    if possible_country == "czech":
-        return "czech republic"
-    if possible_country == "united":
+    if possible_country == "czech" or possible_country == "czech republic":
+        return "czechia"
+    if possible_country == "united" or possible_country == "uk" or possible_country == "britain" or possible_country == "british":
         return "united kingdom"
     if possible_country == "san":
         return "san marino"

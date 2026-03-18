@@ -13,6 +13,7 @@ class State:
         self._chat_id = chat_id
         if os.path.exists(path_for_chat_id(chat_id)):
             self.load_state()
+            self.massage_ints()
         else:
             self._registered_users = {}
             self._current_picking_user = None
@@ -23,6 +24,17 @@ class State:
             self._picks = 0
             self._left_over = 0
             self.save_state()
+    
+    def massage_ints(self):
+        for user_id in self._registered_users.keys():
+            if isinstance(user_id, str):
+                new_user_id = int(user_id)
+                self._registered_users[new_user_id] = self._registered_users.pop(user_id)
+        if isinstance(self._current_picking_user, str):
+            self._current_picking_user = int(self._current_picking_user)
+        for country, picker_id in self._picked_countries.items():
+            if isinstance(picker_id, str):
+                self._picked_countries[country] = int(picker_id)
     
     def save_state(self):
         with open(path_for_chat_id(self._chat_id), 'w') as outfile:
@@ -80,13 +92,13 @@ class State:
     def _shuffle_users_into_draft_order(self):
         self._draft_order = list(self._registered_users.keys()).copy()
         random.shuffle(self._draft_order)
-        reversed = self.draft_order.copy()
+        reversed = self._draft_order.copy()
         reversed.reverse()
         self._draft_order.extend(reversed)
         self.forward_draft_order()
         self.save_state()
     
-    def _set_pick_count_and_left_over(self):
+    def __set_pick_count_and_left_over(self):
         country_count = get_country_count()
         user_count = self.get_registered_user_count()
         rounds = country_count // user_count
