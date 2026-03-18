@@ -78,10 +78,12 @@ def get_boycott_reply(country):
 
 def get_pick_reply(user_name, country, flag, song_title, song_url, song_detail):
     llm_text = COMMON_HEADER + \
-        "The user " + user_name + " has just picked " + country.title() + " (" + flag + ") - " + song_title + ". " + \
-        "The song details are: " + (song_detail if song_detail else "None") + ". " + \
-        "The song URL is: " + (song_url if song_url else "None") + ". " + \
-        "Respond with a witty, humorous, possibly slightly cheeky reply that Graham Norton might say in response to this pick. " + \
-        "Keep to no more than about 150 characters. " + \
+        "The user " + user_name + " has just picked " + country.title() + " (" + flag + ") - " + song_title + ". "
+    if song_detail:
+        llm_text += "The song details are: " + song_detail + ". "
+    if song_url:
+        llm_text += "The song URL is: " + song_url + ". "
+    llm_text += "Respond with a witty, humorous, possibly slightly cheeky reply that Graham Norton might say in response to this pick. " + \
+        "Keep to no more than about 100 characters. " + \
         "Make sure the reply is appropriate for a Telegram chat and does not contain any offensive content, or be risque."
     return get_llm_response(llm_text, LARGER_MODEL)

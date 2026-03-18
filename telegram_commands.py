@@ -18,21 +18,21 @@ def get_picked_countries(update):
     for user_id, user_name in state.get_registered_users():
         text += "\n<b>" + user_name + "</b>:"
         list_empty = True
-        for country, picker_id in state.get_picked_countries(user_id):
-            if picker_id == user_id:
-                eliminated = country in SEMI_FINAL_ONE_ELIMINATED or country in SEMI_FINAL_TWO_ELIMINATED
-                text += " "
-                if eliminated:
-                    text += "<s>"
-                text += country.title() + " (" + COUNTRY_FLAGS[country] + ")"
-                if eliminated:
-                    text += "</s>"
-                text += ","
-                list_empty = False
+        for country in state.get_picked_countries(user_id):
+            eliminated = country in SEMI_FINAL_ONE_ELIMINATED or country in SEMI_FINAL_TWO_ELIMINATED
+            text += " "
+            if eliminated:
+                text += "<s>"
+            text += country.title() + " (" + COUNTRY_FLAGS[country] + ")"
+            if eliminated:
+                text += "</s>"
+            text += ","
+            list_empty = False
         if not list_empty:
             text = text[:-1]
         else:
             text += " None!"
+        text += "\n"
     if state.is_registration_closed():
         text += "\n<b>Not picked:</b>"
         for country in COUNTRIES:
@@ -196,7 +196,7 @@ def pick_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE, llm: b
     reply_text = update.effective_user.full_name +  " picked " + country.title() + " (" + flag + ") - " + song_title + " "
     if song_url:
         reply_text += song_url
-    reply_text += "."
+    reply_text += ". "
     if llm:
         reply_text += llm_telegram.get_pick_reply(update.effective_user.full_name, country, flag, song_title, song_url, song_detail)
     reply_text += "\n\nThere are " + str(state.get_left_to_pick_country_count()) + " countries left to pick (type \\still_to_pick to see them).\n"
@@ -431,7 +431,13 @@ async def messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not user_intent:
         reply_text = llm_telegram.get_banter_reply(update.message.text)
     elif user_intent == "pick":
-        user_intent = "pick " + update.message.text.split()
+        if len(update.message.text.split()) >= 2:
+            user_intent = update.message.text.split()[1].lower()
+        elif len(update.message.text.split()) == 1:
+            user_intent = "pick " + update.message.text.split()[0]
+        else:
+            await update.message.reply_text("Sorry, I didn't understand that.")
+            return  
     
     for command_name, command_function in LLM_COMMANDS.items():
         if user_intent and user_intent.startswith("pick ") and command_name == "pick":
@@ -440,7 +446,7 @@ async def messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if user_intent == command_name:
             reply_text = command_function(update, context)
 
-    await update.message.reply_text(reply_text)
+    await update.message.reply_text(reply_text, parse_mode=telegram.constants.ParseMode.HTML)
 
 
 

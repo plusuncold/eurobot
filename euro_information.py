@@ -6,7 +6,7 @@ COUNTRY_FLAGS = {
     "belgium": "🇧🇪", "cyprus": "🇨🇾", "iceland": "🇮🇸", "greece": "🇬🇷", "poland": "🇵🇱", "slovenia": "🇸🇮", "georgia": "🇬🇪", 
     "san marino": "🇸🇲", "austria": "🇦🇹", "albania": "🇦🇱", "lithuania": "🇱🇹", "australia": "🇦🇺", "france": "🇫🇷", 
     "germany": "🇩🇪", "italy": "🇮🇹", "spain": "🇪🇸", "ukraine": "🇺🇦", "united kingdom": "🇬🇧", "luxembourg": "🇱🇺",
-     "montenegro": "🇲🇪"
+     "montenegro": "🇲🇪", "bulgaria": "🇧🇬"
 }
 
 SEMI_FINAL_ONE = [

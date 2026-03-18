@@ -25,11 +25,21 @@ class State:
             self._left_over = 0
             self.save_state()
     
-    def massage_ints(self):
+    def fix_registered_users(self):
+        users_to_add = {}
+        user_ids_to_remove = []
         for user_id in self._registered_users.keys():
             if isinstance(user_id, str):
                 new_user_id = int(user_id)
-                self._registered_users[new_user_id] = self._registered_users.pop(user_id)
+                users_to_add[new_user_id] = self._registered_users[user_id]
+                user_ids_to_remove.append(user_id)
+        for user_id in user_ids_to_remove:
+            self._registered_users.pop(user_id, None)
+        for user_id in users_to_add.keys():
+            self._registered_users[user_id] = users_to_add[user_id]
+
+    def massage_ints(self):
+        self.fix_registered_users()
         if isinstance(self._current_picking_user, str):
             self._current_picking_user = int(self._current_picking_user)
         for country, picker_id in self._picked_countries.items():
@@ -48,9 +58,8 @@ class State:
         return self._finished_registration
     
     def get_registered_users(self):
+        self.fix_registered_users()
         for user_id, user_name in self._registered_users.items():
-            if isinstance(user_id, str):
-                user_id = int(user_id)
             yield user_id, user_name
     
     def get_registered_user_ids(self):
@@ -76,9 +85,14 @@ class State:
     def get_user_name(self, user_id):
         if isinstance(user_id, str):
             user_id = int(user_id)
-        if user_id not in self._registered_users.keys():
-            return None
-        return self._registered_users[user_id]
+        for registered_user_id, user_name in self._registered_users.items():
+            if isinstance(registered_user_id, str):
+                registered_user_id = int(registered_user_id)
+                # fix the key in the dict to be an int, not a str
+                self._registered_users[registered_user_id] = self._registered_users.pop(str(registered_user_id))
+            if registered_user_id == user_id:
+                return user_name
+        return None
     
     def get_registered_user_count(self):
         return len(self._registered_users.keys())
@@ -126,7 +140,13 @@ class State:
     
     def get_current_picking_user(self):
         user_id = self._current_picking_user
-        return self.get_user_name(user_id)
+        user_name = self.get_user_name(user_id)
+        if not user_name:
+            return None
+        return user_name
+    
+    def get_current_picking_user_id(self):
+        return self._current_picking_user
 
     def get_next_picking_user(self):
         pick = len(self._picked_countries) + 1
