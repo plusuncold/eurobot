@@ -127,6 +127,11 @@ async def current_picks_command(update: Update, context: ContextTypes.DEFAULT_TY
     await update.message.reply_text(reply_text, parse_mode=telegram.constants.ParseMode.HTML)
 
 
+def wrap_user_message_as_link(state):
+    current_picking_user_name = state.get_current_picking_user()
+    current_picking_user_id = state.get_current_picking_user_id()
+    return f"<a href=\"tg://user?id={current_picking_user_id}\">@{current_picking_user_name}</a>"
+
 def end_registration_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /end_registration is issued."""
     state = get_state_this_chat(update)
@@ -144,7 +149,7 @@ def end_registration_command_text(update: Update, context: ContextTypes.DEFAULT_
     reply_text += "\n\nThere are " + str(get_country_count()) + " countries to pick from.\n"
     reply_text += "\nThere will be a total of " + str(state.get_pick_count()) + " picks."
     reply_text += "\n\n" + str(state.get_left_over_count()) + " countries will be left over."
-    reply_text += "\n\nFirst to pick is " + state.get_current_picking_user()
+    reply_text += "\n\nFirst to pick is " + wrap_user_message_as_link(state) + "."
     return reply_text
 
 
@@ -203,7 +208,7 @@ def pick_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE, llm: b
     if state.is_draft_complete():
         reply_text += "\n\nDraft complete!"
     else:
-        reply_text += "\nThe next person to pick is " + state.get_current_picking_user()
+        reply_text += "\nThe next person to pick is " + wrap_user_message_as_link(state) + "."
     
     return reply_text
 
