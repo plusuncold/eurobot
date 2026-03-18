@@ -188,9 +188,13 @@ def pick_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE, llm: b
     flag = COUNTRY_FLAGS[country]
     song_title = SONGS[country]
     song_url = SONG_URLS[country] if country in SONG_URLS else None
+    song_detail = get_song_detail(country)
     reply_text = update.effective_user.full_name +  " picked " + country.title() + " (" + flag + ") - " + song_title + " "
     if song_url:
-        reply_text += song_url + "."
+        reply_text += song_url
+    reply_text += "."
+    if llm:
+        reply_text += llm_telegram.get_pick_reply(update.effective_user.full_name, country, flag, song_title, song_url, song_detail)
     reply_text += "\n\nThere are " + str(state.get_left_to_pick_country_count()) + " countries left to pick (type \\still_to_pick to see them).\n"
     if state.is_draft_complete():
         reply_text += "\n\nDraft complete!"
@@ -421,6 +425,8 @@ async def messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     for command_name, command_function in LLM_COMMANDS.items():
         if user_intent == command_name:
             reply_text = command_function(update, context)
+        if user_intent and user_intent.startswith("pick "):
+            reply_text = pick_command_text(update, context, True)
 
     await update.message.reply_text(reply_text)
 

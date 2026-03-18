@@ -110,3 +110,7 @@ def convert_first_word_to_country(possible_country):
     if possible_country == "san":
         return "san marino"
     return possible_country
+
+
+def get_song_detail(country):
+    return None
