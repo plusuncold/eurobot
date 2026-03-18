@@ -3,3 +3,4 @@ state_*.json.bak
 *.tar
 __pycache__
 *.csv
+song_details.json

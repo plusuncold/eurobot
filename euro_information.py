@@ -1,3 +1,6 @@
+import json
+import os
+
 
 COUNTRY_FLAGS = {
     "norway": "🇳🇴", "malta": "🇲🇹", "serbia": "🇷🇸", "latvia": "🇱🇻", "portugal": "🇵🇹", "ireland": "🇮🇪", "croatia": "🇭🇷",
@@ -115,4 +118,9 @@ def convert_first_word_to_country(possible_country):
 
 
 def get_song_detail(country):
+    if os.path.exists("song_details.json"):
+        with open("song_details.json", "r") as infile:
+            song_details = json.load(infile)
+            if country in song_details:
+                return song_details[country]
     return None
