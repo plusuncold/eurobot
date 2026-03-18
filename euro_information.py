@@ -88,6 +88,7 @@ SONGS = {
 }
 SONG_URLS = {
 }
+BOYCOTT_COUNTRIES = [ "iceland", "ireland", "spain", "netherlands", "slovenia" ]
 COUNTRIES = list(SONGS.keys())
 CURRENT_YEAR = 2026
 

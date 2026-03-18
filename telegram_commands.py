@@ -181,6 +181,8 @@ def pick_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE, llm: b
     country = convert_first_word_to_country(country)
 
     if not country in COUNTRIES:
+        if country in BOYCOTT_COUNTRIES:
+            return llm_telegram.get_boycott_reply(country)
         return "Invalid country!"
     if state.has_country_been_picked(country):
         return f"Country '{country.title()}' already picked!"

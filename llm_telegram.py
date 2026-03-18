@@ -67,6 +67,14 @@ def get_banter_reply(user_message):
         "Make sure the reply is appropriate for a Telegram chat and does not contain any offensive content, or be risque."
     return get_llm_response(llm_text, LARGER_MODEL)
 
+def get_boycott_reply(country):
+    llm_text = COMMON_HEADER + \
+        "The user has just tried to pick " + country.title() + ", but that country is boycotting Israel being" + \
+        "in the competition, so they can't pick that country. " + \
+        "Respond with a witty, humorous, possibly slightly cheeky reply that Graham Norton might say in response to this. " + \
+        "Make sure the reply is appropriate for a Telegram chat and does not contain any offensive content, or be risque."
+    return get_llm_response(llm_text, LARGER_MODEL)
+
 
 def get_pick_reply(user_name, country, flag, song_title, song_url, song_detail):
     llm_text = COMMON_HEADER + \
