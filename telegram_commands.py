@@ -251,7 +251,7 @@ def help_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
-    message = help_command_text(update)
+    message = help_command_text(update, context)
     await update.message.reply_text(message)
 
 
@@ -412,7 +412,7 @@ def results_command_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def results_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /results is issued."""
-    reply_text = results_command_text(update)
+    reply_text = results_command_text(update, context)
     await update.message.reply_text(reply_text, parse_mode=telegram.constants.ParseMode.HTML)
 
 

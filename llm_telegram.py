@@ -63,7 +63,7 @@ def get_banter_reply(user_message):
     llm_text = COMMON_HEADER + \
         "The user message is: " + user_message + "\n\n" + \
         "Respond with a witty, humorous, possibly slightly cheeky reply that Graham Norton might say. " + \
-        "Keep to no more than about 100 characters. " + \
+        "Keep to no more than about 150 characters. " + \
         "Make sure the reply is appropriate for a Telegram chat and does not contain any offensive content, or be risque."
     return get_llm_response(llm_text, LARGER_MODEL)
 
@@ -82,5 +82,6 @@ def get_pick_reply(user_name, country, flag, song_title, song_url, song_detail):
         "The song details are: " + (song_detail if song_detail else "None") + ". " + \
         "The song URL is: " + (song_url if song_url else "None") + ". " + \
         "Respond with a witty, humorous, possibly slightly cheeky reply that Graham Norton might say in response to this pick. " + \
+        "Keep to no more than about 150 characters. " + \
         "Make sure the reply is appropriate for a Telegram chat and does not contain any offensive content, or be risque."
     return get_llm_response(llm_text, LARGER_MODEL)
